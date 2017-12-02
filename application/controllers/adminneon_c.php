@@ -96,22 +96,54 @@ class Adminneon_c extends CI_Controller {
         redirect(base_url() . 'index.php/adminneon_c/admin_getdata');
     }
 
-    public function update_admin($admin_id) {
+    public function update_admin() {
+     
+        $id = $this->session->userdata('admin_id');
+        // var_dump($admin_id);die;
+        if ($id != '') {
+            $admin_id = $this->input->post('update_action') == '';
 
-        $admin_id = $this->session->userdata('admin_id');
-
-        if ($admin_id != '') {
-            $query = $this->adminneon_m->edit_admin($this->uri->segment(3));
-            $data['adminDetails'] = null;
-            if ($query) {
-                $data['adminDetails'] = $query;
+            if ($admin_id == '') {
+                $q = $this->adminneon_m->edit_admin($this->uri->segment(3));
+                $d['adminDetails'] = null;
+                if ($q) {
+                    $d['adminDetails'] = $q;
+                } else {
+                    redirect(base_url());
+                }
+                $this->load->view('adminneon/sidebar');
+                $this->load->view('adminneon/admin_edit', $d);
             } else {
-                $this->adminneon_m->adminform_insert($admin_id);
-                redirect(base_url());
+                $this->form_validation->set_rules('admin_firstname', 'Name', 'trim|required');
+                if ($this->form_validation->run() == FALSE) {
+                     $q = $this->adminneon_m->edit_admin($this->uri->segment(3));
+                $d['adminDetails'] = null;
+                if ($q) {
+                    $d['adminDetails'] = $q;
+                } else {
+                    redirect(base_url());
+                }
+                $this->load->view('adminneon/sidebar');
+                $this->load->view('adminneon/admin_edit', $d);
+                } else {
+
+                    $data = array(
+                        'admin_firstname' => $this->input->post('admin_firstname'),
+                         'admin_lastname' => $this->input->post('admin_lastname'),
+                          'admin_email' => $this->input->post('admin_email'),
+                         'admin_contact' => $this->input->post('admin_contact')
+                       
+                    );
+                    $this->db->where('admin_id', $this->input->post('admin_id'));
+                    $this->db->update('admin', $data);
+
+                    redirect(base_url() . 'index.php/adminneon_c/admin_getdata');
+                }
             }
-            $this->load->view('adminneon/sidebar');
-            $this->load->view('adminneon/admin_edit', $data);
+        } else {
+            $this->login_user();
         }
+       
     }
 
     public function delete($admin_id) {
